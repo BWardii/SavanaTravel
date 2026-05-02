@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSeenEnquiries } from "@/hooks/use-seen-enquiries";
 import type { Customer, CustomerStatus } from "@/types";
 import { formatDistanceToNow, format, subDays, subYears } from "date-fns";
 import {
@@ -11,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type Period = "1d" | "7d" | "30d" | "1y";
+type Period = "all" | "1d" | "7d" | "30d" | "1y";
 
 interface OverviewClientProps {
   stats: {
@@ -53,7 +54,7 @@ function StatusBadge({ status }: { status: CustomerStatus }) {
 }
 
 const PERIOD_LABELS: Record<Period, string> = {
-  "1d": "1D", "7d": "7D", "30d": "30D", "1y": "1Y",
+  "all": "All", "1d": "1D", "7d": "7D", "30d": "30D", "1y": "1Y",
 };
 
 function periodStart(p: Period): Date {
@@ -61,14 +62,17 @@ function periodStart(p: Period): Date {
   if (p === "1d") return subDays(now, 1);
   if (p === "7d") return subDays(now, 7);
   if (p === "30d") return subDays(now, 30);
-  return subYears(now, 1);
+  if (p === "1y") return subYears(now, 1);
+  return new Date(0); // all time fallback
 }
 
 export function OverviewClient({ stats, recent, dueSoon, allCustomers }: OverviewClientProps) {
-  const [period, setPeriod] = useState<Period>("30d");
+  const [period, setPeriod] = useState<Period>("all");
+  const { isNew } = useSeenEnquiries();
 
-  const start = periodStart(period);
-  const filtered = allCustomers.filter((c) => new Date(c.created_at) >= start);
+  const filtered = period === "all"
+    ? allCustomers
+    : allCustomers.filter((c) => new Date(c.created_at) >= periodStart(period));
   const periodCollected    = filtered.reduce((s, c) => s + (c.amount_paid ?? 0), 0);
   const periodOutstanding  = filtered
     .filter((c) => c.status !== "Paid")
@@ -198,15 +202,16 @@ export function OverviewClient({ stats, recent, dueSoon, allCustomers }: Overvie
             </div>
           </div>
 
-          {/* All-time footnote */}
-          <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center gap-6">
-            <span className="text-xs text-slate-400">
-              All-time collected: <span className="font-semibold text-slate-600">{fmt2(stats.collected)}</span>
-            </span>
-            <span className="text-xs text-slate-400">
-              All-time outstanding: <span className="font-semibold text-slate-600">{fmt2(stats.outstanding)}</span>
-            </span>
-          </div>
+          {period !== "all" && (
+            <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center gap-6">
+              <span className="text-xs text-slate-400">
+                All-time collected: <span className="font-semibold text-slate-600">{fmt2(stats.collected)}</span>
+              </span>
+              <span className="text-xs text-slate-400">
+                All-time outstanding: <span className="font-semibold text-slate-600">{fmt2(stats.outstanding)}</span>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ── Bottom row ────────────────────────────────────────────────────── */}
@@ -240,7 +245,14 @@ export function OverviewClient({ stats, recent, dueSoon, allCustomers }: Overvie
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">{c.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-slate-900 truncate">{c.name}</p>
+                          {isNew(c.id) && (
+                            <span className="text-[9px] font-bold uppercase tracking-widest bg-indigo-600 text-white rounded px-1.5 py-0.5 shrink-0">
+                              New
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-slate-400 truncate">{c.destination}</p>
                       </div>
                     </div>

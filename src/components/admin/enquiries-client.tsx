@@ -18,6 +18,7 @@ import type { Customer, CustomerStatus } from "@/types";
 import { format } from "date-fns";
 import { ArrowUpDown, Search, ChevronRight, AlertTriangle, Clock, PoundSterling } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSeenEnquiries } from "@/hooks/use-seen-enquiries";
 
 interface EnquiriesClientProps {
   customers: Customer[];
@@ -116,6 +117,7 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
   const [selected, setSelected]   = useState<Customer | null>(null);
   const [sorting, setSorting]     = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const { isNew, markSeen } = useSeenEnquiries();
 
   function handleUpdated(updated: Customer) {
     setCustomers((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
@@ -157,10 +159,19 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
               {row.original.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="font-medium text-slate-900 whitespace-nowrap">{row.original.name}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium text-slate-900 whitespace-nowrap">{row.original.name}</p>
+                {isNew(row.original.id) && (
+                  <span className="text-[9px] font-bold uppercase tracking-widest bg-indigo-600 text-white rounded px-1.5 py-0.5 shrink-0">
+                    New
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-400 mt-0.5 whitespace-nowrap">
                 {row.original.destination}
-                {(row.original.num_travelers ?? 1) > 1 && ` · ${row.original.num_travelers} pax`}
+                {(row.original.num_travelers ?? 1) > 1
+                  ? ` · 👥 Group (${row.original.num_travelers})`
+                  : " · 👤 Individual"}
               </p>
             </div>
           </div>
@@ -306,7 +317,7 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
                 ) : table.getRowModel().rows.map((row) => {
                   const ds = getDateStatus(row.original);
                   return (
-                    <TableRow key={row.id} onClick={() => setSelected(row.original)}
+                    <TableRow key={row.id} onClick={() => { setSelected(row.original); markSeen(row.original.id); }}
                       className={cn(
                         "group cursor-pointer border-slate-100 transition-colors",
                         ds === "overdue"   ? "bg-red-50/40 hover:bg-red-50/70"
