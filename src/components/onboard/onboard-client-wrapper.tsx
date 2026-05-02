@@ -10,22 +10,43 @@ function PageContent() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F4]">
-      <header className="border-b border-[#E8E2D9] bg-[#FAF8F4]/90 backdrop-blur-sm sticky top-0 z-10">
-        <div className="mx-auto max-w-5xl px-8 h-14 flex items-center justify-between gap-4">
-          <Link href="/" className="font-serif text-lg tracking-wide text-[#1C1917] shrink-0">
-            Savana
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <header className="border-b border-[#E8E2D9] bg-[#FAF8F4]/95 backdrop-blur-sm sticky top-0 z-20">
+        <div className="mx-auto max-w-2xl px-5 h-14 flex items-center justify-between gap-3">
+          {/* Brand */}
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <span className="font-serif text-xl tracking-wide text-[#1C1917] font-medium">
+              Savana<span className="text-[#8B7355]">Travel</span>
+            </span>
           </Link>
-          <span className="text-xs tracking-[0.2em] uppercase text-[#9C8B7E] hidden sm:block">
-            {t.headerLabel}
-          </span>
-          <LanguageSwitcher />
+
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] tracking-[0.18em] uppercase text-[#9C8B7E] hidden sm:block">
+              {t.headerLabel}
+            </span>
+            <LanguageSwitcher />
+          </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl px-8 py-16 grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-16">
+      {/* ── Hero banner (mobile) ────────────────────────────────────────────── */}
+      <div className="bg-[#1C1917] px-5 py-5 lg:hidden">
+        <h1 className="font-serif font-light text-2xl text-white leading-snug">
+          {t.pageTitle}
+        </h1>
+        <p className="text-xs text-[#9C8B7E] mt-1">{t.privacy}</p>
+      </div>
 
-        {/* Left sidebar */}
+      {/* ── Main content ────────────────────────────────────────────────────── */}
+      <div className="mx-auto max-w-2xl px-4 py-6 lg:py-14 lg:max-w-5xl lg:px-8 lg:grid lg:grid-cols-[1fr_2fr] lg:gap-16">
+
+        {/* Left sidebar — desktop only */}
         <aside className="hidden lg:block pt-2">
+          <h1 className="font-serif font-light text-4xl text-[#1C1917] leading-tight mb-10">
+            {t.pageTitle}
+          </h1>
+
           <p className="text-xs tracking-[0.2em] uppercase text-[#9C8B7E] mb-6">
             {t.sidebarProcess}
           </p>
@@ -48,19 +69,36 @@ function PageContent() {
           </div>
         </aside>
 
-        {/* Form */}
-        <div>
-          <div className="mb-10">
-            <h1 className="font-serif font-light text-4xl text-[#1C1917] leading-tight">
-              {t.pageTitle}
-            </h1>
+        {/* Form card */}
+        <div className="w-full">
+          {/* Mobile: process steps collapsed strip */}
+          <div className="lg:hidden mb-4 flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+            {t.sidebarSteps.map(({ label }, i) => (
+              <div key={i} className="flex items-center gap-1.5 shrink-0">
+                <span className="font-serif text-xs text-[#C4B49A]">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="text-xs text-[#6B5E52]">{label}</span>
+                {i < t.sidebarSteps.length - 1 && (
+                  <span className="text-[#D4CAC0] text-xs ml-1">›</span>
+                )}
+              </div>
+            ))}
           </div>
 
-          <div className="border border-[#E8E2D9] bg-white p-8 sm:p-10">
+          {/* The form itself — no extra outer padding on mobile */}
+          <div className="border border-[#E8E2D9] bg-white p-5 sm:p-8 rounded-lg lg:rounded-none lg:p-10">
             <OnboardingForm />
           </div>
 
-          <p className="text-xs text-[#9C8B7E] mt-5">{t.privacy}</p>
+          <p className="text-xs text-[#9C8B7E] mt-4 px-1 lg:px-0">{t.privacy}</p>
+
+          {/* Mobile: sidebar note at bottom */}
+          <div className="lg:hidden mt-6 px-1 pb-8">
+            <p className="text-xs text-[#9C8B7E] leading-relaxed border-t border-[#E8E2D9] pt-4">
+              {t.sidebarNote}
+            </p>
+          </div>
         </div>
       </div>
     </div>

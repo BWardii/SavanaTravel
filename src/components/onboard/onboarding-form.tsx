@@ -122,7 +122,7 @@ export function OnboardingForm() {
       <div className="space-y-8">
         <StepIndicator currentStep={step} />
 
-        <div className="relative overflow-hidden min-h-[440px]">
+        <div className="relative overflow-hidden min-h-[380px]">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={step}
@@ -141,12 +141,12 @@ export function OnboardingForm() {
           </AnimatePresence>
         </div>
 
-        <div className="flex items-center justify-between pt-6 border-t border-[#E8E2D9] mt-2">
+        <div className="flex items-center justify-between pt-5 border-t border-[#E8E2D9] mt-4">
           <button
             type="button"
             onClick={handleBack}
             disabled={step === 0}
-            className="text-sm text-[#9C8B7E] hover:text-[#1C1917] transition-colors disabled:opacity-0 tracking-wide"
+            className="text-sm text-[#9C8B7E] hover:text-[#1C1917] transition-colors disabled:opacity-0 tracking-wide py-2 px-1"
           >
             {t.back}
           </button>
@@ -170,7 +170,7 @@ export function OnboardingForm() {
             <Button
               type="button"
               onClick={handleNext}
-              className="bg-[#1C1917] hover:bg-[#2D2520] text-white rounded-none h-9 px-6 text-sm tracking-wide"
+              className="bg-[#1C1917] hover:bg-[#2D2520] text-white rounded-none h-11 px-7 text-sm tracking-wide"
             >
               {t.continue}
             </Button>
@@ -179,7 +179,7 @@ export function OnboardingForm() {
               type="button"
               onClick={form.handleSubmit(onSubmit)}
               disabled={isSubmitting}
-              className="bg-[#1C1917] hover:bg-[#2D2520] text-white rounded-none h-9 px-6 text-sm tracking-wide"
+              className="bg-[#1C1917] hover:bg-[#2D2520] text-white rounded-none h-11 px-7 text-sm tracking-wide"
             >
               {isSubmitting ? (
                 <>

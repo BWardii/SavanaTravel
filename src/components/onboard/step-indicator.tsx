@@ -12,7 +12,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
   const steps = t.steps;
 
   return (
-    <div className="flex items-center gap-0 mb-8">
+    <div className="flex items-center gap-0 mb-6 overflow-x-auto pb-1 scrollbar-none">
       {steps.map((label, index) => {
         const isCompleted = index < currentStep;
         const isActive = index === currentStep;
