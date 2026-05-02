@@ -35,7 +35,6 @@ function PageContent() {
         <h1 className="font-serif font-light text-2xl text-white leading-snug">
           {t.pageTitle}
         </h1>
-        <p className="text-xs text-[#9C8B7E] mt-1">{t.privacy}</p>
       </div>
 
       {/* ── Main content ────────────────────────────────────────────────────── */}
@@ -91,7 +90,6 @@ function PageContent() {
             <OnboardingForm />
           </div>
 
-          <p className="text-xs text-[#9C8B7E] mt-4 px-1 lg:px-0">{t.privacy}</p>
 
           {/* Mobile: sidebar note at bottom */}
           <div className="lg:hidden mt-6 px-1 pb-8">
