@@ -20,18 +20,14 @@ export default async function OverviewPage() {
   const now = Date.now();
 
   const total       = customers.length;
-  const pending     = customers.filter((c) => c.status === "Pending").length;
-  const partial     = customers.filter((c) => c.status === "Partial").length;
+  const pending     = customers.filter((c) => c.status === "Pending" || c.status === "Partial").length;
   const paid        = customers.filter((c) => c.status === "Paid").length;
   const overdue     = customers.filter((c) => {
     if (!c.payment_due_date || c.status === "Paid") return false;
     return new Date(c.payment_due_date).getTime() < now;
   }).length;
 
-  // Total money actually collected (sum of amount_paid across all customers)
-  const collected = customers.reduce((s, c) => s + (c.amount_paid ?? 0), 0);
-
-  // Total outstanding (unpaid balances on non-Paid customers)
+  const collected   = customers.reduce((s, c) => s + (c.amount_paid ?? 0), 0);
   const outstanding = customers
     .filter((c) => c.status !== "Paid")
     .reduce((s, c) => s + Math.max(0, (c.flight_price ?? 0) - (c.amount_paid ?? 0)), 0);
@@ -42,13 +38,12 @@ export default async function OverviewPage() {
     return days <= 7;
   });
 
-  const recent = customers.slice(0, 5);
-
   return (
     <OverviewClient
-      stats={{ total, pending, partial, paid, overdue, collected, outstanding }}
-      recent={recent}
+      stats={{ total, pending, paid, overdue, collected, outstanding }}
+      recent={customers.slice(0, 5)}
       dueSoon={dueSoon}
+      allCustomers={customers}
     />
   );
 }
