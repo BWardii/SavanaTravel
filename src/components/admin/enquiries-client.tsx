@@ -317,7 +317,7 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
                 ) : table.getRowModel().rows.map((row) => {
                   const ds = getDateStatus(row.original);
                   return (
-                    <TableRow key={row.id} onClick={() => { setSelected(row.original); markSeen(row.original.id); }}
+                    <TableRow key={row.id} onClick={() => { setSelected(row.original); markSeen(row.original.id); }} 
                       className={cn(
                         "group cursor-pointer border-slate-100 transition-colors",
                         ds === "overdue"   ? "bg-red-50/40 hover:bg-red-50/70"

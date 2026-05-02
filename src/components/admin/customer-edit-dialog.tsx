@@ -68,22 +68,24 @@ function TravellerRow({ t, index }: { t: Traveller; index: number }) {
         </div>
         <p className="text-sm font-semibold text-slate-800">{t.name}</p>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-8">
-        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-          <CalendarDays className="h-3 w-3 text-slate-400" />
-          {fmtDate(t.dob)}
+        <div className="grid grid-cols-1 gap-y-1.5 pl-8 mt-1">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-400 flex items-center gap-1.5"><CalendarDays className="h-3 w-3" />Date of Birth</span>
+            <span className="text-slate-700 font-medium">{fmtDate(t.dob)}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-400 flex items-center gap-1.5"><Globe className="h-3 w-3" />Nationality</span>
+            <span className="text-slate-700 font-medium">{t.nationality || "—"}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-400 flex items-center gap-1.5"><BookOpen className="h-3 w-3" />Passport Number</span>
+            <span className="text-slate-700 font-mono font-medium">{t.passport_number || "—"}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-400 flex items-center gap-1.5"><CalendarDays className="h-3 w-3" />Passport Expiry</span>
+            <span className="text-slate-700 font-medium">{fmtDate(t.passport_expiry)}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-          <Globe className="h-3 w-3 text-slate-400" />
-          {t.nationality || "—"}
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 col-span-2">
-          <BookOpen className="h-3 w-3 text-slate-400" />
-          <span className="font-mono">{t.passport_number}</span>
-          <span className="text-slate-300 mx-1">·</span>
-          <span>exp. {fmtDate(t.passport_expiry)}</span>
-        </div>
-      </div>
     </div>
   );
 }
@@ -358,23 +360,23 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
                   <p className="text-sm font-semibold text-slate-800">{customer.name}</p>
                   <span className="ml-auto text-[10px] font-semibold uppercase tracking-wide bg-indigo-100 text-indigo-600 rounded px-1.5 py-0.5">Lead</span>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-8">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <CalendarDays className="h-3 w-3 text-slate-400" />
-                    {fmtDate(customer.dob)}
+                <div className="grid grid-cols-1 gap-y-1.5 pl-8 mt-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400 flex items-center gap-1.5"><CalendarDays className="h-3 w-3" />Date of Birth</span>
+                    <span className="text-slate-700 font-medium">{fmtDate(customer.dob)}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <Globe className="h-3 w-3 text-slate-400" />
-                    {customer.nationality || "—"}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400 flex items-center gap-1.5"><Globe className="h-3 w-3" />Nationality</span>
+                    <span className="text-slate-700 font-medium">{customer.nationality || "—"}</span>
                   </div>
-                  {customer.passport_number && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 col-span-2">
-                      <BookOpen className="h-3 w-3 text-slate-400" />
-                      <span className="font-mono">{customer.passport_number}</span>
-                      <span className="text-slate-300 mx-1">·</span>
-                      <span>exp. {fmtDate(customer.passport_expiry)}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400 flex items-center gap-1.5"><BookOpen className="h-3 w-3" />Passport Number</span>
+                    <span className="text-slate-700 font-mono font-medium">{customer.passport_number || "—"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400 flex items-center gap-1.5"><CalendarDays className="h-3 w-3" />Passport Expiry</span>
+                    <span className="text-slate-700 font-medium">{fmtDate(customer.passport_expiry)}</span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { CustomerEditDialog } from "./customer-edit-dialog";
 
 type Period = "all" | "1d" | "7d" | "30d" | "1y";
 
@@ -67,12 +68,24 @@ function periodStart(p: Period): Date {
 }
 
 export function OverviewClient({ stats, recent, dueSoon, allCustomers }: OverviewClientProps) {
-  const [period, setPeriod] = useState<Period>("all");
-  const { isNew } = useSeenEnquiries();
+  const [period, setPeriod]     = useState<Period>("all");
+  const [selected, setSelected] = useState<Customer | null>(null);
+  const [customers, setCustomers] = useState<Customer[]>(allCustomers);
+  const { isNew, markSeen } = useSeenEnquiries();
+
+  function openEnquiry(c: Customer) {
+    setSelected(c);
+    markSeen(c.id);
+  }
+
+  function handleUpdated(updated: Customer) {
+    setCustomers((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    setSelected(null);
+  }
 
   const filtered = period === "all"
-    ? allCustomers
-    : allCustomers.filter((c) => new Date(c.created_at) >= periodStart(period));
+    ? customers
+    : customers.filter((c) => new Date(c.created_at) >= periodStart(period));
   const periodCollected    = filtered.reduce((s, c) => s + (c.amount_paid ?? 0), 0);
   const periodOutstanding  = filtered
     .filter((c) => c.status !== "Paid")
@@ -237,7 +250,9 @@ export function OverviewClient({ stats, recent, dueSoon, allCustomers }: Overvie
                 const total   = c.flight_price ?? 0;
                 const balance = Math.max(0, total - paid);
                 return (
-                  <div key={c.id} className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50/80 transition-colors">
+                  <div key={c.id}
+                    onClick={() => openEnquiry(c)}
+                    className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50/80 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="h-8 w-8 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
                         <span className="text-xs font-semibold text-indigo-600">
@@ -321,6 +336,15 @@ export function OverviewClient({ stats, recent, dueSoon, allCustomers }: Overvie
           </div>
         </div>
       </div>
+
+      {selected && (
+        <CustomerEditDialog
+          customer={selected}
+          open={!!selected}
+          onOpenChange={(open) => !open && setSelected(null)}
+          onUpdated={handleUpdated}
+        />
+      )}
     </div>
   );
 }
