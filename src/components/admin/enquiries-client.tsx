@@ -124,9 +124,10 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
     toast.success(`${updated.name} updated.`);
   }
 
-  const overdueCount  = customers.filter((c) => getDateStatus(c) === "overdue").length;
-  const dueSoonCount  = customers.filter((c) => getDateStatus(c) === "due-soon").length;
-  const partialCount  = customers.filter((c) => c.status === "Partial").length;
+  const overdueCount    = customers.filter((c) => getDateStatus(c) === "overdue").length;
+  const dueSoonCount    = customers.filter((c) => getDateStatus(c) === "due-soon").length;
+  const partialCount    = customers.filter((c) => c.status === "Partial").length;
+  const needsQuoteCount = customers.filter((c) => !c.flight_price || c.flight_price === 0).length;
 
   // Financial totals
   const totalRevenue     = customers.reduce((s, c) => s + (c.amount_paid ?? 0), 0);
@@ -159,11 +160,20 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
               {row.original.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="font-medium text-slate-900 whitespace-nowrap">{row.original.name}</p>
                 {isNew(row.original.id) && (
                   <span className="text-[9px] font-bold uppercase tracking-widest bg-indigo-600 text-white rounded px-1.5 py-0.5 shrink-0">
                     New
+                  </span>
+                )}
+                {(!row.original.flight_price || row.original.flight_price === 0) ? (
+                  <span className="text-[9px] font-bold uppercase tracking-widest bg-orange-500 text-white rounded px-1.5 py-0.5 shrink-0 animate-pulse">
+                    Needs Quote
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700 border border-emerald-200 rounded px-1.5 py-0.5 shrink-0">
+                    Quoted
                   </span>
                 )}
               </div>
@@ -257,6 +267,11 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
               {partialCount} partial
             </span>
           )}
+          {needsQuoteCount > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full px-3 py-1 animate-pulse">
+              ✏️ {needsQuoteCount} need{needsQuoteCount === 1 ? "s" : ""} quote
+            </span>
+          )}
         </div>
       </header>
 
@@ -340,10 +355,12 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
             <p className="text-xs text-slate-400">
               {table.getFilteredRowModel().rows.length} of {customers.length} records
             </p>
-            <div className="flex items-center gap-4 text-[11px] text-slate-400">
+            <div className="flex items-center gap-4 text-[11px] text-slate-400 flex-wrap">
               <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-red-100" />Overdue</span>
               <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-amber-100" />Due within 3 days</span>
               <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-blue-100" />Partial payment</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-orange-400 rounded-sm" />Needs quote</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-emerald-100" />Quoted</span>
             </div>
           </div>
         </div>

@@ -260,11 +260,20 @@ export function OverviewClient({ stats, recent, dueSoon, allCustomers }: Overvie
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <p className="text-sm font-medium text-slate-900 truncate">{c.name}</p>
                           {isNew(c.id) && (
                             <span className="text-[9px] font-bold uppercase tracking-widest bg-indigo-600 text-white rounded px-1.5 py-0.5 shrink-0">
                               New
+                            </span>
+                          )}
+                          {(!c.flight_price || c.flight_price === 0) ? (
+                            <span className="text-[9px] font-bold uppercase tracking-widest bg-orange-500 text-white rounded px-1.5 py-0.5 shrink-0">
+                              Needs Quote
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700 border border-emerald-200 rounded px-1.5 py-0.5 shrink-0">
+                              Quoted
                             </span>
                           )}
                         </div>
