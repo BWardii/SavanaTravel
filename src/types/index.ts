@@ -1,4 +1,4 @@
-export type CustomerStatus = "Pending" | "Paid";
+export type CustomerStatus = "Pending" | "Partial" | "Paid";
 
 export interface Traveller {
   id: string;
@@ -26,8 +26,10 @@ export interface Customer {
   passport_number?: string | null;
   passport_expiry?: string | null;
   flight_price: number | null;
+  amount_paid: number | null;
   payment_due_date: string | null;
   status: CustomerStatus;
+  last_notified_at?: string | null;
   created_at: string;
   travellers?: Traveller[];
 }

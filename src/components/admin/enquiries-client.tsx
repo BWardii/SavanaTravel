@@ -3,13 +3,9 @@
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  flexRender,
-  type ColumnDef,
-  type SortingState,
+  useReactTable, getCoreRowModel, getSortedRowModel,
+  getFilteredRowModel, flexRender,
+  type ColumnDef, type SortingState,
 } from "@tanstack/react-table";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -18,9 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CustomerEditDialog } from "./customer-edit-dialog";
-import type { Customer } from "@/types";
+import type { Customer, CustomerStatus } from "@/types";
 import { format } from "date-fns";
-import { ArrowUpDown, Search, ChevronRight, AlertTriangle, Clock } from "lucide-react";
+import { ArrowUpDown, Search, ChevronRight, AlertTriangle, Clock, PoundSterling } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EnquiriesClientProps {
@@ -28,7 +24,6 @@ interface EnquiriesClientProps {
   isDemo: boolean;
 }
 
-// Returns "overdue" | "due-soon" | "ok" | null
 function getDateStatus(c: Customer): "overdue" | "due-soon" | "ok" | null {
   if (!c.payment_due_date || c.status === "Paid") return null;
   const days = Math.ceil((new Date(c.payment_due_date).getTime() - Date.now()) / 86400000);
@@ -37,84 +32,113 @@ function getDateStatus(c: Customer): "overdue" | "due-soon" | "ok" | null {
   return "ok";
 }
 
-function StatusBadge({ status }: { status: Customer["status"] }) {
+function fmt(v: number | null | undefined) {
+  if (v == null) return "—";
+  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0 }).format(v);
+}
+
+function fmt2(v: number | null | undefined) {
+  if (v == null) return "—";
+  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 2 }).format(v);
+}
+
+function StatusBadge({ status }: { status: CustomerStatus }) {
+  const cfg: Record<CustomerStatus, string> = {
+    Paid:    "bg-emerald-50 text-emerald-700 border-emerald-100",
+    Partial: "bg-blue-50 text-blue-700 border-blue-100",
+    Pending: "bg-amber-50 text-amber-700 border-amber-100",
+  };
   return (
-    <Badge variant="secondary" className={cn(
-      "text-xs font-medium",
-      status === "Paid"
-        ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-        : "bg-amber-50 text-amber-700 border-amber-100"
-    )}>
+    <Badge variant="secondary" className={cn("text-xs font-medium", cfg[status])}>
       {status}
     </Badge>
+  );
+}
+
+function PaymentCell({ c }: { c: Customer }) {
+  const total   = c.flight_price ?? 0;
+  const paid    = c.amount_paid ?? 0;
+  const balance = Math.max(0, total - paid);
+  const pct     = total > 0 ? Math.min(100, (paid / total) * 100) : 0;
+
+  if (!total) return <span className="text-sm text-slate-300">Not set</span>;
+
+  return (
+    <div className="space-y-1 min-w-[140px]">
+      <div className="flex justify-between text-xs">
+        <span className="text-slate-500">{fmt(paid)} paid</span>
+        <span className={cn("font-semibold", balance === 0 ? "text-emerald-600" : "text-red-600")}>
+          {balance === 0 ? "Settled" : `${fmt(balance)} left`}
+        </span>
+      </div>
+      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all",
+            pct >= 100 ? "bg-emerald-500" : pct > 0 ? "bg-blue-500" : "bg-slate-200"
+          )}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="text-[10px] text-slate-400">of {fmt(total)} total</p>
+    </div>
   );
 }
 
 function DueDateCell({ c }: { c: Customer }) {
   const ds = getDateStatus(c);
   const dateStr = c.payment_due_date ? format(new Date(c.payment_due_date), "d MMM yyyy") : null;
-
   if (!dateStr) return <span className="text-sm text-slate-300">—</span>;
-
-  if (ds === "overdue") {
-    return (
-      <span className="inline-flex items-center gap-1.5">
-        <span className="text-sm font-semibold text-red-600">{dateStr}</span>
-        <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide bg-red-100 text-red-600 rounded px-1.5 py-0.5">
-          <AlertTriangle className="h-2.5 w-2.5" />
-          Overdue
-        </span>
+  if (ds === "overdue") return (
+    <span className="inline-flex items-center gap-1.5 flex-wrap">
+      <span className="text-sm font-semibold text-red-600">{dateStr}</span>
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide bg-red-100 text-red-600 rounded px-1.5 py-0.5">
+        <AlertTriangle className="h-2.5 w-2.5" /> Overdue
       </span>
-    );
-  }
-
+    </span>
+  );
   if (ds === "due-soon") {
     const days = Math.ceil((new Date(c.payment_due_date!).getTime() - Date.now()) / 86400000);
     return (
       <span className="inline-flex items-center gap-1.5">
         <span className="text-sm font-semibold text-amber-600">{dateStr}</span>
         <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide bg-amber-100 text-amber-600 rounded px-1.5 py-0.5">
-          <Clock className="h-2.5 w-2.5" />
-          {days === 0 ? "Today" : `${days}d`}
+          <Clock className="h-2.5 w-2.5" /> {days === 0 ? "Today" : `${days}d`}
         </span>
       </span>
     );
   }
-
   return <span className="text-sm text-slate-600">{dateStr}</span>;
-}
-
-function formatCurrency(v: number | null) {
-  if (v === null || v === undefined) return "—";
-  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 0 }).format(v);
-}
-
-function formatDate(d: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "d MMM yyyy"); } catch { return "—"; }
 }
 
 export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientProps) {
   const [customers, setCustomers] = useState<Customer[]>(initial);
-  const [selected, setSelected] = useState<Customer | null>(null);
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [selected, setSelected]   = useState<Customer | null>(null);
+  const [sorting, setSorting]     = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
   function handleUpdated(updated: Customer) {
     setCustomers((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-    setSelected(null);
     toast.success(`${updated.name} updated.`);
   }
 
   const overdueCount  = customers.filter((c) => getDateStatus(c) === "overdue").length;
   const dueSoonCount  = customers.filter((c) => getDateStatus(c) === "due-soon").length;
-  const pendingCount  = customers.filter((c) => c.status === "Pending").length;
+  const partialCount  = customers.filter((c) => c.status === "Partial").length;
+
+  // Financial totals
+  const totalRevenue     = customers.reduce((s, c) => s + (c.amount_paid ?? 0), 0);
+  const totalOutstanding = customers
+    .filter((c) => c.status !== "Paid")
+    .reduce((s, c) => s + Math.max(0, (c.flight_price ?? 0) - (c.amount_paid ?? 0)), 0);
 
   const columns = useMemo<ColumnDef<Customer>[]>(() => [
     {
       accessorKey: "name",
       header: ({ column }) => (
-        <Button variant="ghost" size="sm" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} className="-ml-3 text-xs font-semibold text-slate-500 hover:text-slate-900">
+        <Button variant="ghost" size="sm"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-3 text-xs font-semibold text-slate-500 hover:text-slate-900">
           Client <ArrowUpDown className="ml-1.5 h-3 w-3" />
         </Button>
       ),
@@ -126,32 +150,51 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
               "h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-xs font-semibold",
               ds === "overdue"  ? "bg-red-100 text-red-600"
               : ds === "due-soon" ? "bg-amber-100 text-amber-600"
+              : row.original.status === "Paid" ? "bg-emerald-100 text-emerald-600"
+              : row.original.status === "Partial" ? "bg-blue-100 text-blue-600"
               : "bg-indigo-50 text-indigo-600"
             )}>
               {row.original.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="font-medium text-slate-900">{row.original.name}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{row.original.destination}</p>
+              <p className="font-medium text-slate-900 whitespace-nowrap">{row.original.name}</p>
+              <p className="text-xs text-slate-400 mt-0.5 whitespace-nowrap">
+                {row.original.destination}
+                {(row.original.num_travelers ?? 1) > 1 && ` · ${row.original.num_travelers} pax`}
+              </p>
             </div>
           </div>
         );
       },
     },
     {
+      id: "payment_breakdown",
+      accessorFn: (row) => row.flight_price,
+      header: () => <span className="text-xs font-semibold text-slate-500">Payment</span>,
+      cell: ({ row }) => <PaymentCell c={row.original} />,
+    },
+    {
       accessorKey: "flight_price",
-      header: () => <span className="text-xs font-semibold text-slate-500">Flight Price</span>,
+      header: ({ column }) => (
+        <Button variant="ghost" size="sm"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-3 text-xs font-semibold text-slate-500 hover:text-slate-900">
+          Total <ArrowUpDown className="ml-1.5 h-3 w-3" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
-        <span className={cn("text-sm font-medium tabular-nums", getValue() ? "text-slate-800" : "text-slate-300")}>
-          {formatCurrency(getValue() as number | null)}
+        <span className={cn("text-sm font-semibold tabular-nums", getValue() ? "text-slate-800" : "text-slate-300")}>
+          {fmt2(getValue() as number | null)}
         </span>
       ),
     },
     {
       accessorKey: "payment_due_date",
       header: ({ column }) => (
-        <Button variant="ghost" size="sm" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} className="-ml-3 text-xs font-semibold text-slate-500 hover:text-slate-900">
-          Payment Due <ArrowUpDown className="ml-1.5 h-3 w-3" />
+        <Button variant="ghost" size="sm"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-3 text-xs font-semibold text-slate-500 hover:text-slate-900">
+          Due Date <ArrowUpDown className="ml-1.5 h-3 w-3" />
         </Button>
       ),
       cell: ({ row }) => <DueDateCell c={row.original} />,
@@ -159,26 +202,16 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
     {
       accessorKey: "status",
       header: () => <span className="text-xs font-semibold text-slate-500">Status</span>,
-      cell: ({ getValue }) => <StatusBadge status={getValue() as Customer["status"]} />,
-    },
-    {
-      accessorKey: "created_at",
-      header: ({ column }) => (
-        <Button variant="ghost" size="sm" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} className="-ml-3 text-xs font-semibold text-slate-500 hover:text-slate-900">
-          Submitted <ArrowUpDown className="ml-1.5 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ getValue }) => <span className="text-xs text-slate-400">{formatDate(getValue() as string)}</span>,
+      cell: ({ getValue }) => <StatusBadge status={getValue() as CustomerStatus} />,
     },
     {
       id: "actions",
       cell: () => <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors" />,
     },
-  ], [customers]);
+  ], []);
 
   const table = useReactTable({
-    data: customers,
-    columns,
+    data: customers, columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -194,46 +227,59 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
       <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0">
         <div>
           <h1 className="text-lg font-semibold text-slate-900">Enquiries</h1>
-          <p className="text-xs text-slate-500">Manage flight pricing, payment dates and booking status</p>
+          <p className="text-xs text-slate-500">Invoice tracking, payment status and booking management</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           {isDemo && <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-100">Demo</Badge>}
-
-          {/* Overdue pill */}
           {overdueCount > 0 && (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded-full px-3 py-1">
-              <AlertTriangle className="h-3 w-3" />
-              {overdueCount} overdue
+              <AlertTriangle className="h-3 w-3" /> {overdueCount} overdue
             </span>
           )}
-
-          {/* Due soon pill */}
           {dueSoonCount > 0 && (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
-              <Clock className="h-3 w-3" />
-              {dueSoonCount} due soon
+              <Clock className="h-3 w-3" /> {dueSoonCount} due soon
             </span>
           )}
-
-          <span className="text-xs text-slate-400 ml-1">{pendingCount} pending</span>
+          {partialCount > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-3 py-1">
+              {partialCount} partial
+            </span>
+          )}
         </div>
       </header>
+
+      {/* Financial summary strip */}
+      <div className="bg-white border-b border-slate-200 px-8 py-3 flex items-center gap-8">
+        <div className="flex items-center gap-2">
+          <PoundSterling className="h-4 w-4 text-emerald-600" />
+          <span className="text-xs text-slate-500">Collected</span>
+          <span className="text-sm font-bold text-emerald-700">{fmt2(totalRevenue)}</span>
+        </div>
+        <div className="h-4 w-px bg-slate-200" />
+        <div className="flex items-center gap-2">
+          <PoundSterling className="h-4 w-4 text-red-500" />
+          <span className="text-xs text-slate-500">Outstanding</span>
+          <span className="text-sm font-bold text-red-600">{fmt2(totalOutstanding)}</span>
+        </div>
+        <div className="h-4 w-px bg-slate-200" />
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Clients</span>
+          <span className="text-sm font-bold text-slate-700">{customers.length}</span>
+        </div>
+      </div>
 
       <div className="flex-1 p-8">
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <div>
               <h2 className="font-medium text-slate-900">All Enquiries</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Click a row to set flight price, payment due date and status</p>
+              <p className="text-xs text-slate-500 mt-0.5">Click a row to update pricing, payments and status</p>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-              <Input
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Search…"
-                className="pl-9 h-9 w-52 text-sm border-slate-200 bg-white"
-              />
+              <Input value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)}
+                placeholder="Search…" className="pl-9 h-9 w-52 text-sm border-slate-200 bg-white" />
             </div>
           </div>
 
@@ -260,16 +306,13 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
                 ) : table.getRowModel().rows.map((row) => {
                   const ds = getDateStatus(row.original);
                   return (
-                    <TableRow
-                      key={row.id}
-                      onClick={() => setSelected(row.original)}
+                    <TableRow key={row.id} onClick={() => setSelected(row.original)}
                       className={cn(
                         "group cursor-pointer border-slate-100 transition-colors",
                         ds === "overdue"   ? "bg-red-50/40 hover:bg-red-50/70"
                         : ds === "due-soon" ? "bg-amber-50/40 hover:bg-amber-50/70"
                         : "hover:bg-indigo-50/30"
-                      )}
-                    >
+                      )}>
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id} className="py-3.5">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -282,32 +325,23 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
             </Table>
           </div>
 
-          {/* Legend */}
           <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between">
             <p className="text-xs text-slate-400">
               {table.getFilteredRowModel().rows.length} of {customers.length} records
             </p>
             <div className="flex items-center gap-4 text-[11px] text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-sm bg-red-100" />
-                Overdue
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-sm bg-amber-100" />
-                Due within 3 days
-              </span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-red-100" />Overdue</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-amber-100" />Due within 3 days</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-blue-100" />Partial payment</span>
             </div>
           </div>
         </div>
       </div>
 
       {selected && (
-        <CustomerEditDialog
-          customer={selected}
-          open={!!selected}
+        <CustomerEditDialog customer={selected} open={!!selected}
           onOpenChange={(open) => !open && setSelected(null)}
-          onUpdated={handleUpdated}
-        />
+          onUpdated={handleUpdated} />
       )}
     </div>
   );

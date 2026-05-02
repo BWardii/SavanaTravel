@@ -2,7 +2,6 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { Customer } from "@/types";
 import { OverviewClient } from "@/components/admin/overview-client";
 
-// Always fetch fresh — never serve a cached snapshot
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Overview — Savana Manager" };
 
@@ -18,21 +17,25 @@ export default async function OverviewPage() {
     .order("created_at", { ascending: false });
 
   const customers: Customer[] = (error || !data) ? [] : (data as Customer[]);
-
   const now = Date.now();
 
-  const total   = customers.length;
-  const pending = customers.filter((c) => c.status === "Pending").length;
-  const paid    = customers.filter((c) => c.status === "Paid").length;
-  const overdue = customers.filter((c) => {
+  const total       = customers.length;
+  const pending     = customers.filter((c) => c.status === "Pending").length;
+  const partial     = customers.filter((c) => c.status === "Partial").length;
+  const paid        = customers.filter((c) => c.status === "Paid").length;
+  const overdue     = customers.filter((c) => {
     if (!c.payment_due_date || c.status === "Paid") return false;
     return new Date(c.payment_due_date).getTime() < now;
   }).length;
-  const revenue = customers
-    .filter((c) => c.status === "Paid" && c.flight_price)
-    .reduce((sum, c) => sum + (c.flight_price ?? 0), 0);
 
-  // Due within 7 days (includes overdue)
+  // Total money actually collected (sum of amount_paid across all customers)
+  const collected = customers.reduce((s, c) => s + (c.amount_paid ?? 0), 0);
+
+  // Total outstanding (unpaid balances on non-Paid customers)
+  const outstanding = customers
+    .filter((c) => c.status !== "Paid")
+    .reduce((s, c) => s + Math.max(0, (c.flight_price ?? 0) - (c.amount_paid ?? 0)), 0);
+
   const dueSoon = customers.filter((c) => {
     if (!c.payment_due_date || c.status === "Paid") return false;
     const days = Math.ceil((new Date(c.payment_due_date).getTime() - now) / 86400000);
@@ -43,7 +46,7 @@ export default async function OverviewPage() {
 
   return (
     <OverviewClient
-      stats={{ total, pending, paid, overdue, revenue }}
+      stats={{ total, pending, partial, paid, overdue, collected, outstanding }}
       recent={recent}
       dueSoon={dueSoon}
     />
