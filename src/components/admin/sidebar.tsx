@@ -38,6 +38,16 @@ const NAV = [
       </svg>
     ),
   },
+  {
+    href: "/admin/manual-entry",
+    label: "Manual Entry",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+        <rect x="1" y="1" width="13" height="13" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+        <path d="M7.5 4.5v6M4.5 7.5h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
 ];
 
 interface SidebarProps {
