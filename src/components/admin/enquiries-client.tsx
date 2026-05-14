@@ -250,6 +250,17 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase();
+      const { name, email, destination, skyrise_reference, phone } = row.original;
+      return (
+        (name ?? "").toLowerCase().includes(q) ||
+        (email ?? "").toLowerCase().includes(q) ||
+        (destination ?? "").toLowerCase().includes(q) ||
+        (skyrise_reference ?? "").toLowerCase().includes(q) ||
+        (phone ?? "").toLowerCase().includes(q)
+      );
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
