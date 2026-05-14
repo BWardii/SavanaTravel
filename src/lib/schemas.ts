@@ -16,9 +16,10 @@ export const travellerSchema = z.object({
 // ─── Step 1 — Trip Details ─────────────────────────────────────────────────────
 
 export const tripDetailsSchema = z.object({
+  trip_type: z.enum(["one-way", "return"]).default("return"),
   destination: z.string().min(2, "Please enter a destination"),
   departure_date: z.string().min(1, "Departure date is required"),
-  return_date: z.string().min(1, "Return date is required"),
+  return_date: z.string().optional().nullable(),
   num_travelers: z.preprocess(
     (val) => (val === "" ? undefined : Number(val)),
     z.number().min(1, "At least 1 traveler").max(20, "Maximum 20 travelers")
@@ -48,7 +49,15 @@ export const personalInfoSchema = z.object({
 
 // ─── Full form ─────────────────────────────────────────────────────────────────
 
-export const onboardingSchema = tripDetailsSchema.merge(personalInfoSchema);
+export const onboardingSchema = tripDetailsSchema.merge(personalInfoSchema).superRefine((data, ctx) => {
+  if (data.trip_type === "return" && !data.return_date) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Return date is required for return trips",
+      path: ["return_date"],
+    });
+  }
+});
 
 export type TravellerData    = z.infer<typeof travellerSchema>;
 export type TripDetailsData  = z.infer<typeof tripDetailsSchema>;

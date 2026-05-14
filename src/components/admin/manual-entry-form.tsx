@@ -48,7 +48,8 @@ export function ManualEntryForm() {
   } = useForm<OnboardingData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(onboardingSchema) as any,
-    defaultValues: {
+      defaultValues: {
+      trip_type: "return" as const,
       num_travelers: 1,
       travellers: [],
       special_requests: "",
@@ -59,6 +60,7 @@ export function ManualEntryForm() {
 
   const numTravelers = watch("num_travelers");
   const destination  = watch("destination");
+  const tripType     = watch("trip_type") ?? "return";
 
   // Sync additional traveller slots with num_travelers
   useEffect(() => {
@@ -158,18 +160,45 @@ export function ManualEntryForm() {
             <FieldError message={errors.destination?.message} />
           </div>
 
+          {/* Trip Type */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-slate-600 uppercase tracking-wide">Trip Type</Label>
+            <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1 gap-1">
+              {(["one-way", "return"] as const).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    setValue("trip_type", type, { shouldValidate: true });
+                    if (type === "one-way") setValue("return_date", null, { shouldValidate: true });
+                  }}
+                  className={cn(
+                    "px-5 py-1.5 rounded-md text-sm font-medium transition-all",
+                    tripType === type
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-slate-500 hover:text-slate-800"
+                  )}
+                >
+                  {type === "one-way" ? "One Way" : "Return"}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Dates */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className={cn("grid gap-4", tripType === "return" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 max-w-xs")}>
             <div className="space-y-1.5">
               <Label htmlFor="departure_date" className="text-xs font-medium text-slate-600 uppercase tracking-wide">Departure Date</Label>
               <Input id="departure_date" type="date" {...register("departure_date")} className="h-10 border-slate-200" />
               <FieldError message={errors.departure_date?.message} />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="return_date" className="text-xs font-medium text-slate-600 uppercase tracking-wide">Return Date</Label>
-              <Input id="return_date" type="date" {...register("return_date")} className="h-10 border-slate-200" />
-              <FieldError message={errors.return_date?.message} />
-            </div>
+            {tripType === "return" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="return_date" className="text-xs font-medium text-slate-600 uppercase tracking-wide">Return Date</Label>
+                <Input id="return_date" type="date" {...register("return_date")} className="h-10 border-slate-200" />
+                <FieldError message={errors.return_date?.message} />
+              </div>
+            )}
           </div>
 
           {/* Travellers count */}

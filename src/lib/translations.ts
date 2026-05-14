@@ -23,6 +23,9 @@ export interface Translations {
   tripDetailsTitle: string;
   tripDetailsSubtitle: string;
   destination: string;
+  tripTypeLabel: string;
+  tripTypeOneWay: string;
+  tripTypeReturn: string;
   departureDate: string;
   returnDate: string;
   numTravellers: string;
@@ -92,6 +95,9 @@ export const translations: Record<Locale, Translations> = {
     tripDetailsTitle: "Trip Details",
     tripDetailsSubtitle: "Tell us about your dream destination and travel dates.",
     destination: "Destination",
+    tripTypeLabel: "Trip Type",
+    tripTypeOneWay: "One Way",
+    tripTypeReturn: "Return",
     departureDate: "Departure Date",
     returnDate: "Return Date",
     numTravellers: "Number of Travellers",
@@ -159,6 +165,9 @@ export const translations: Record<Locale, Translations> = {
     tripDetailsTitle: "Faahfaahinta Safarka",
     tripDetailsSubtitle: "Noo sheeg goobta aad u safri doonto iyo taariikhaha safarka.",
     destination: "Meesha La Socdo",
+    tripTypeLabel: "Nooca Safarka",
+    tripTypeOneWay: "Hal Dhinac",
+    tripTypeReturn: "Noqosho",
     departureDate: "Taariikhda Bixitaanka",
     returnDate: "Taariikhda Noqoshada",
     numTravellers: "Tirada Musaafirada",

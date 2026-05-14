@@ -30,6 +30,7 @@ export function StepTripDetails() {
   const { t } = useLanguage();
   const form = useFormContext<OnboardingData>();
   const currentDestination = form.watch("destination");
+  const tripType = form.watch("trip_type") ?? "return";
   const isCustom =
     currentDestination !== "" &&
     !POPULAR_DESTINATIONS.some((d) => d.label === currentDestination);
@@ -120,8 +121,46 @@ export function StepTripDetails() {
         )}
       />
 
+      {/* Trip Type toggle */}
+      <FormField
+        control={form.control}
+        name="trip_type"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-[#1C1917] text-sm font-medium tracking-wide">
+              {t.tripTypeLabel}
+            </FormLabel>
+            <FormControl>
+              <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 gap-1">
+                {(["one-way", "return"] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => {
+                      field.onChange(type);
+                      if (type === "one-way") {
+                        form.setValue("return_date", null, { shouldValidate: true });
+                      }
+                    }}
+                    className={cn(
+                      "px-5 py-2 rounded-md text-sm font-medium transition-all",
+                      field.value === type
+                        ? "bg-[#1C1917] text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-800"
+                    )}
+                  >
+                    {type === "one-way" ? t.tripTypeOneWay : t.tripTypeReturn}
+                  </button>
+                ))}
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       {/* Dates */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className={cn("grid gap-4", tripType === "return" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-1 max-w-xs")}>
         <FormField
           control={form.control}
           name="departure_date"
@@ -146,28 +185,31 @@ export function StepTripDetails() {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="return_date"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-[#1C1917] text-sm font-medium tracking-wide">
-                {t.returnDate}
-              </FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    {...field}
-                    type="date"
-                    className="pl-9 h-11 border-slate-200 focus:border-[#8B7355] focus:ring-[#8B7355]/10"
-                  />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {tripType === "return" && (
+          <FormField
+            control={form.control}
+            name="return_date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[#1C1917] text-sm font-medium tracking-wide">
+                  {t.returnDate}
+                </FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      type="date"
+                      className="pl-9 h-11 border-slate-200 focus:border-[#8B7355] focus:ring-[#8B7355]/10"
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </div>
 
       {/* Travellers */}
