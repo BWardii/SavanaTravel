@@ -46,7 +46,8 @@ export function ManualEntryForm() {
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<OnboardingData>({
-    resolver: zodResolver(onboardingSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(onboardingSchema) as any,
     defaultValues: {
       num_travelers: 1,
       travellers: [],
