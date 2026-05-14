@@ -210,6 +210,20 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
       ),
     },
     {
+      accessorKey: "skyrise_reference",
+      header: () => <span className="text-xs font-semibold text-slate-500">Skyrise Ref</span>,
+      cell: ({ getValue }) => {
+        const ref = getValue() as string | null;
+        return ref ? (
+          <span className="inline-flex items-center gap-1 text-xs font-mono font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded px-2 py-0.5">
+            # {ref}
+          </span>
+        ) : (
+          <span className="text-xs text-slate-300 italic">No ref</span>
+        );
+      },
+    },
+    {
       accessorKey: "payment_due_date",
       header: ({ column }) => (
         <Button variant="ghost" size="sm"

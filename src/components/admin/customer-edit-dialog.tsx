@@ -14,11 +14,12 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import type { Customer, CustomerStatus, Traveller } from "@/types";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, Users, User, Globe, BookOpen, CalendarDays } from "lucide-react";
+import { Loader2, Users, User, Globe, BookOpen, CalendarDays, Hash } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const editSchema = z.object({
+  skyrise_reference: z.string().optional().nullable(),
   flight_price: z.preprocess(
     (v) => (v === "" || v == null ? null : Number(v)),
     z.number().min(0).nullable()
@@ -124,6 +125,7 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       resolver: zodResolver(editSchema) as any,
       defaultValues: {
+        skyrise_reference: customer.skyrise_reference ?? "",
         flight_price: customer.flight_price,
         amount_paid: customer.amount_paid ?? 0,
         payment_due_date: customer.payment_due_date ?? "",
@@ -133,6 +135,7 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
 
   useEffect(() => {
     reset({
+      skyrise_reference: customer.skyrise_reference ?? "",
       flight_price: customer.flight_price,
       amount_paid: customer.amount_paid ?? 0,
       payment_due_date: customer.payment_due_date ?? "",
@@ -160,6 +163,7 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
       const { data: updated, error } = await supabase
         .from("customers")
         .update({
+          skyrise_reference: data.skyrise_reference || null,
           flight_price: data.flight_price,
           amount_paid: data.amount_paid ?? 0,
           payment_due_date: data.payment_due_date || null,
@@ -237,6 +241,16 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
           <div className="space-y-4">
             {/* Snapshot */}
             <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-1">
+              {customer.skyrise_reference && (
+                <div className="flex justify-between items-center py-1.5 border-b border-slate-200 mb-1">
+                  <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                    <Hash className="h-3 w-3" /> Skyrise Ref
+                  </span>
+                  <span className="text-sm font-bold text-indigo-600 font-mono tracking-wide">
+                    {customer.skyrise_reference}
+                  </span>
+                </div>
+              )}
               <InfoRow label="Email"     value={customer.email} />
               <InfoRow label="Phone"     value={customer.phone} />
               <InfoRow label="Departure" value={fmtDate(customer.departure_date)} />
@@ -289,6 +303,21 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
 
             {/* Edit form */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+              {/* Skyrise Reference */}
+              <div className="space-y-1.5">
+                <Label htmlFor="skyrise_reference" className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                  <Hash className="h-3.5 w-3.5 text-slate-400" />
+                  Skyrise Reference
+                </Label>
+                <Input
+                  id="skyrise_reference"
+                  {...register("skyrise_reference")}
+                  placeholder="e.g. SKY-2026-00123"
+                  className="h-10 border-slate-200 font-mono uppercase tracking-wide placeholder:normal-case placeholder:tracking-normal"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="flight_price" className="text-sm font-medium text-slate-700">Total Price (£)</Label>
