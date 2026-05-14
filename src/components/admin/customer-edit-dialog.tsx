@@ -12,14 +12,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import type { Customer, CustomerStatus, Traveller } from "@/types";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, Users, User, Globe, BookOpen, CalendarDays, Hash } from "lucide-react";
+import { Loader2, Users, User, Globe, BookOpen, CalendarDays, Hash, StickyNote } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const editSchema = z.object({
   skyrise_reference: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
   flight_price: z.preprocess(
     (v) => (v === "" || v == null ? null : Number(v)),
     z.number().min(0).nullable()
@@ -126,6 +128,7 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
       resolver: zodResolver(editSchema) as any,
       defaultValues: {
         skyrise_reference: customer.skyrise_reference ?? "",
+        notes: customer.notes ?? "",
         flight_price: customer.flight_price,
         amount_paid: customer.amount_paid ?? 0,
         payment_due_date: customer.payment_due_date ?? "",
@@ -136,6 +139,7 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
   useEffect(() => {
     reset({
       skyrise_reference: customer.skyrise_reference ?? "",
+      notes: customer.notes ?? "",
       flight_price: customer.flight_price,
       amount_paid: customer.amount_paid ?? 0,
       payment_due_date: customer.payment_due_date ?? "",
@@ -164,6 +168,7 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
         .from("customers")
         .update({
           skyrise_reference: data.skyrise_reference || null,
+          notes: data.notes || null,
           flight_price: data.flight_price,
           amount_paid: data.amount_paid ?? 0,
           payment_due_date: data.payment_due_date || null,
@@ -257,6 +262,14 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
               <InfoRow label="Return"    value={fmtDate(customer.return_date)} />
               <InfoRow label="Submitted" value={customer.created_at
                 ? format(new Date(customer.created_at), "d MMM yyyy, HH:mm") : null} />
+              {customer.notes && (
+                <div className="py-2 border-t border-slate-100 mt-1">
+                  <p className="text-xs text-slate-400 flex items-center gap-1.5 mb-1">
+                    <StickyNote className="h-3 w-3" /> Notes
+                  </p>
+                  <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">{customer.notes}</p>
+                </div>
+              )}
             </div>
 
             {/* Live invoice summary */}
@@ -315,6 +328,22 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onUpdated }: 
                   {...register("skyrise_reference")}
                   placeholder="e.g. SKY-2026-00123"
                   className="h-10 border-slate-200 font-mono uppercase tracking-wide placeholder:normal-case placeholder:tracking-normal"
+                />
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-1.5">
+                <Label htmlFor="notes" className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                  <StickyNote className="h-3.5 w-3.5 text-slate-400" />
+                  Notes
+                  <span className="text-xs text-slate-400 font-normal ml-1">— flight details, special requests, etc.</span>
+                </Label>
+                <Textarea
+                  id="notes"
+                  {...register("notes")}
+                  placeholder="e.g. Booked via Qatar Airways QR001, window seat requested, requires visa support…"
+                  rows={4}
+                  className="border-slate-200 resize-none text-sm leading-relaxed"
                 />
               </div>
 

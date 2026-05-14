@@ -26,6 +26,7 @@ export interface Customer {
   passport_number?: string | null;
   passport_expiry?: string | null;
   skyrise_reference?: string | null;
+  notes?: string | null;
   flight_price: number | null;
   amount_paid: number | null;
   payment_due_date: string | null;
