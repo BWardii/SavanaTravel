@@ -5,7 +5,7 @@ import type { OnboardingData } from "@/lib/schemas";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/language-context";
 
-function formatDate(d: string) {
+function formatDate(d: string | null | undefined) {
   if (!d) return "—";
   try { return format(new Date(d), "d MMMM yyyy"); } catch { return d; }
 }
@@ -44,7 +44,7 @@ export function StepReview() {
       <Section title={t.reviewTripSection}>
         <Row label={t.reviewDestination} value={v.destination} />
         <Row label={t.reviewDeparture}   value={formatDate(v.departure_date)} />
-        <Row label={t.reviewReturn}      value={formatDate(v.return_date)} />
+        {v.trip_type !== "one-way" && <Row label={t.reviewReturn} value={formatDate(v.return_date)} />}
         <Row label={t.reviewTravellers}  value={`${count} ${count === 1 ? t.personSingular : t.personPlural}`} />
         {v.special_requests && <Row label={t.reviewRequests} value={v.special_requests} />}
       </Section>
