@@ -19,6 +19,8 @@ import { StepPersonalInfo } from "./step-personal-info";
 import { StepReview } from "./step-review";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
+import { onboardSuccessPath, type Season } from "@/lib/season";
+import { cn } from "@/lib/utils";
 
 const TOTAL_STEPS = 3;
 
@@ -37,7 +39,7 @@ const slideVariants = {
   }),
 };
 
-export function OnboardingForm() {
+export function OnboardingForm({ season = 2026 }: { season?: Season }) {
   const { t } = useLanguage();
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -48,6 +50,7 @@ export function OnboardingForm() {
   const form = useForm<OnboardingData, any, OnboardingData>({
     resolver: zodResolver(onboardingSchema) as any,
     defaultValues: {
+      trip_type: "return" as const,
       destination: "",
       departure_date: "",
       return_date: "",
@@ -93,7 +96,7 @@ export function OnboardingForm() {
       const res = await fetch("/api/onboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, season }),
       });
 
       if (!res.ok) {
@@ -105,7 +108,7 @@ export function OnboardingForm() {
         description:
           "We'll be in touch within 24 hours with your personalised quote.",
       });
-      router.push("/onboard/success");
+      router.push(onboardSuccessPath(season));
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong";
@@ -141,7 +144,10 @@ export function OnboardingForm() {
           </AnimatePresence>
         </div>
 
-        <div className="flex items-center justify-between pt-5 border-t border-[#E8E2D9] mt-4">
+        <div className={cn(
+          "flex items-center justify-between pt-5 border-t mt-4",
+          season === 2027 ? "border-yellow-200" : "border-[#E8E2D9]"
+        )}>
           <button
             type="button"
             onClick={handleBack}
@@ -170,7 +176,12 @@ export function OnboardingForm() {
             <Button
               type="button"
               onClick={handleNext}
-              className="bg-[#1C1917] hover:bg-[#2D2520] text-white rounded-none h-11 px-7 text-sm tracking-wide"
+              className={cn(
+                "rounded-none h-11 px-7 text-sm tracking-wide",
+                season === 2027
+                  ? "bg-yellow-400 hover:bg-yellow-500 text-yellow-950"
+                  : "bg-[#1C1917] hover:bg-[#2D2520] text-white"
+              )}
             >
               {t.continue}
             </Button>
@@ -179,7 +190,12 @@ export function OnboardingForm() {
               type="button"
               onClick={form.handleSubmit(onSubmit)}
               disabled={isSubmitting}
-              className="bg-[#1C1917] hover:bg-[#2D2520] text-white rounded-none h-11 px-7 text-sm tracking-wide"
+              className={cn(
+                "rounded-none h-11 px-7 text-sm tracking-wide",
+                season === 2027
+                  ? "bg-yellow-400 hover:bg-yellow-500 text-yellow-950"
+                  : "bg-[#1C1917] hover:bg-[#2D2520] text-white"
+              )}
             >
               {isSubmitting ? (
                 <>

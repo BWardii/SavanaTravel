@@ -7,12 +7,14 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, ChevronDown, User, Users, MapPin, FileText } from "lucide-react";
 
+import { useSeason } from "@/contexts/season-context";
 import { onboardingSchema, type OnboardingData } from "@/lib/schemas";
 import { Input }    from "@/components/ui/input";
 import { Label }    from "@/components/ui/label";
 import { Button }   from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { adminPath } from "@/lib/season";
 
 const DESTINATIONS = ["Makkah", "Medina", "Dubai", "Istanbul", "Mogadishu"];
 
@@ -37,6 +39,7 @@ function FieldError({ message }: { message?: string }) {
 
 export function ManualEntryForm() {
   const router = useRouter();
+  const season = useSeason();
 
   const {
     register,
@@ -84,7 +87,7 @@ export function ManualEntryForm() {
       const res = await fetch("/api/onboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, season }),
       });
 
       if (!res.ok) {
@@ -96,7 +99,7 @@ export function ManualEntryForm() {
         description: `${data.name} has been added to the system.`,
       });
 
-      router.push("/admin/enquiries");
+      router.push(adminPath(season, "/enquiries"));
       router.refresh();
     } catch (err) {
       toast.error("Failed to create booking", {

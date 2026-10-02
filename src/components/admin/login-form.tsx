@@ -41,7 +41,7 @@ export function LoginForm() {
 
       if (error) throw new Error(error.message);
 
-      router.push("/admin");
+      router.push("/admin/2026");
       router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed";

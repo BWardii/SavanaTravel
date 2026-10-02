@@ -7,6 +7,7 @@ import type { Customer, Traveller } from "@/types";
 import { format } from "date-fns";
 import { Search, Mail, MapPin, CalendarDays, BookOpen, Globe, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSeason } from "@/contexts/season-context";
 
 interface ContactsClientProps {
   customers: Customer[];
@@ -151,6 +152,8 @@ function ContactCard({ c }: { c: Customer }) {
 }
 
 export function ContactsClient({ customers, isDemo }: ContactsClientProps) {
+  const season = useSeason();
+  const is2027 = season === 2027;
   const [search, setSearch] = useState("");
 
   const filtered = customers.filter((c) => {
@@ -166,8 +169,16 @@ export function ContactsClient({ customers, isDemo }: ContactsClientProps) {
     <div className="flex flex-col min-h-screen bg-slate-50">
       <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold text-slate-900">Contacts</h1>
-          <p className="text-xs text-slate-500">Personal & passport details for all passengers</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold text-slate-900">Contacts</h1>
+            <span className={cn(
+              "text-[10px] font-bold uppercase tracking-widest rounded px-2 py-0.5",
+              is2027 ? "bg-yellow-400 text-yellow-950" : "bg-slate-900 text-white"
+            )}>
+              {season}
+            </span>
+          </div>
+          <p className="text-xs text-slate-500">{season} personal & passport details for all passengers</p>
         </div>
         <div className="flex items-center gap-3">
           {isDemo && (

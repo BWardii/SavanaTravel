@@ -1,22 +1,30 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { notFound } from "next/navigation";
+import { isSeason, parseSeason } from "@/lib/season";
+import { fetchCustomers } from "@/lib/supabase/admin-data";
 import type { Customer } from "@/types";
 import { OverviewClient } from "@/components/admin/overview-client";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Overview — Savana Manager" };
 
-export default async function OverviewPage() {
-  const client = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ season: string }>;
+}) {
+  const { season } = await params;
+  return { title: `Overview ${season} — Savana Manager` };
+}
 
-  const { data, error } = await client
-    .from("customers")
-    .select("*")
-    .order("created_at", { ascending: false });
+export default async function OverviewPage({
+  params,
+}: {
+  params: Promise<{ season: string }>;
+}) {
+  const { season: raw } = await params;
+  if (!isSeason(raw)) notFound();
+  const season = parseSeason(raw);
 
-  const customers: Customer[] = (error || !data) ? [] : (data as Customer[]);
+  const customers: Customer[] = await fetchCustomers(season);
   const now = Date.now();
 
   const total       = customers.length;

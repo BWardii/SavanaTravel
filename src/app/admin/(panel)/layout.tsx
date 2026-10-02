@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Sidebar } from "@/components/admin/sidebar";
+import { SeasonShell } from "@/components/admin/season-shell";
 
 const isSupabaseConfigured =
   process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith("http") &&
@@ -23,12 +23,5 @@ export default async function PanelLayout({
     userEmail = user.email ?? "";
   }
 
-  return (
-    <div className="flex min-h-screen bg-slate-50">
-      <Sidebar userEmail={userEmail} />
-      <div className="flex-1 flex flex-col min-w-0">
-        {children}
-      </div>
-    </div>
-  );
+  return <SeasonShell userEmail={userEmail}>{children}</SeasonShell>;
 }

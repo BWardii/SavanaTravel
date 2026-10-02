@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { onboardingSchema } from "@/lib/schemas";
+import { parseSeason } from "@/lib/season";
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = createClient(
@@ -10,7 +11,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const parsed = onboardingSchema.safeParse(body);
+    const { season: rawSeason, ...formBody } = body;
+    const parsed = onboardingSchema.safeParse(formBody);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -19,6 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const season = parseSeason(rawSeason);
     const {
       name, email, dob, destination, departure_date, return_date,
       num_travelers, special_requests, phone,
@@ -39,6 +42,7 @@ export async function POST(req: NextRequest) {
         passport_number,
         passport_expiry,
         status: "Pending",
+        season,
       })
       .select("id")
       .single();

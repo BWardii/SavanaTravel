@@ -12,6 +12,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CustomerEditDialog } from "./customer-edit-dialog";
+import { useSeason } from "@/contexts/season-context";
+import { adminPath } from "@/lib/season";
 
 type Period = "all" | "1d" | "7d" | "30d" | "1y";
 
@@ -68,6 +70,8 @@ function periodStart(p: Period): Date {
 }
 
 export function OverviewClient({ stats, recent, dueSoon, allCustomers }: OverviewClientProps) {
+  const season = useSeason();
+  const is2027 = season === 2027;
   const [period, setPeriod]     = useState<Period>("all");
   const [selected, setSelected] = useState<Customer | null>(null);
   const [customers, setCustomers] = useState<Customer[]>(allCustomers);
@@ -97,10 +101,18 @@ export function OverviewClient({ stats, recent, dueSoon, allCustomers }: Overvie
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold text-slate-900">Overview</h1>
-          <p className="text-xs text-slate-500">Financial summary and booking status at a glance.</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold text-slate-900">Overview</h1>
+            <span className={cn(
+              "text-[10px] font-bold uppercase tracking-widest rounded px-2 py-0.5",
+              is2027 ? "bg-yellow-400 text-yellow-950" : "bg-slate-900 text-white"
+            )}>
+              {season}
+            </span>
+          </div>
+          <p className="text-xs text-slate-500">{season} financial summary and booking status at a glance.</p>
         </div>
-        <Link href="/admin/enquiries"
+        <Link href={adminPath(season, "/enquiries")}
           className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
           View all enquiries →
         </Link>
@@ -237,7 +249,7 @@ export function OverviewClient({ stats, recent, dueSoon, allCustomers }: Overvie
                 <h2 className="font-medium text-slate-900">Recent Enquiries</h2>
                 <p className="text-xs text-slate-500 mt-0.5">Latest submissions from the onboarding form</p>
               </div>
-              <Link href="/admin/enquiries"
+              <Link href={adminPath(season, "/enquiries")}
                 className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
                 See all
               </Link>

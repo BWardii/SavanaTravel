@@ -32,6 +32,7 @@ export interface Customer {
   payment_due_date: string | null;
   status: CustomerStatus;
   last_notified_at?: string | null;
+  season?: number;
   created_at: string;
   travellers?: Traveller[];
 }

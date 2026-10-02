@@ -22,6 +22,7 @@ create table if not exists public.customers (
   payment_due_date  date,
   status            text        not null default 'Pending'
                     check (status in ('Pending', 'Paid')),
+  season            integer     not null default 2026,
   created_at        timestamptz not null default now()
 );
 
@@ -34,6 +35,7 @@ create policy "Allow authenticated update" on public.customers for update using 
 create index if not exists idx_customers_email            on public.customers (email);
 create index if not exists idx_customers_payment_due_date on public.customers (payment_due_date);
 create index if not exists idx_customers_status           on public.customers (status);
+create index if not exists idx_customers_season           on public.customers (season);
 
 -- ─── Travellers (additional party members) ────────────────────────────────────
 create table if not exists public.travellers (

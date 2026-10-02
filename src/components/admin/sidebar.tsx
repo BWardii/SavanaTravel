@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { adminPath, switchAdminSeason, type Season } from "@/lib/season";
 
 const NAV = [
   {
-    href: "/admin",
+    rest: "",
     label: "Overview",
     icon: (
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
@@ -19,7 +20,7 @@ const NAV = [
     ),
   },
   {
-    href: "/admin/enquiries",
+    rest: "/enquiries",
     label: "Enquiries",
     icon: (
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
@@ -29,7 +30,7 @@ const NAV = [
     ),
   },
   {
-    href: "/admin/contacts",
+    rest: "/contacts",
     label: "Contacts",
     icon: (
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
@@ -39,7 +40,7 @@ const NAV = [
     ),
   },
   {
-    href: "/admin/manual-entry",
+    rest: "/manual-entry",
     label: "Manual Entry",
     icon: (
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
@@ -52,11 +53,13 @@ const NAV = [
 
 interface SidebarProps {
   userEmail: string;
+  season: Season;
 }
 
-export function Sidebar({ userEmail }: SidebarProps) {
+export function Sidebar({ userEmail, season }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const is2027 = season === 2027;
 
   async function handleLogout() {
     const supabase = createClient();
@@ -66,19 +69,50 @@ export function Sidebar({ userEmail }: SidebarProps) {
   }
 
   return (
-    <aside className="w-56 shrink-0 flex flex-col border-r border-slate-200 bg-white min-h-screen">
-
-      {/* Brand */}
-      <div className="px-6 py-5 border-b border-slate-100">
-        <Link href="/" className="font-semibold text-slate-900 tracking-tight">
+    <aside
+      className={cn(
+        "w-56 shrink-0 flex flex-col border-r min-h-screen",
+        is2027 ? "border-yellow-200 bg-[#FFFEF5]" : "border-slate-200 bg-white"
+      )}
+    >
+      <div className={cn("px-6 py-5 border-b", is2027 ? "border-yellow-100" : "border-slate-100")}>
+        <Link href="/" className={cn("font-semibold tracking-tight", is2027 ? "text-yellow-950" : "text-slate-900")}>
           Savana Travel
         </Link>
-        <p className="text-xs text-slate-400 mt-0.5">Manager Portal</p>
+        <p className={cn("text-xs mt-0.5", is2027 ? "text-yellow-700" : "text-slate-400")}>
+          Manager Portal
+        </p>
       </div>
 
-      {/* Nav */}
+      <div className={cn("px-3 py-4 border-b", is2027 ? "border-yellow-100" : "border-slate-100")}>
+        <p className={cn("px-1 mb-2 text-[10px] font-semibold uppercase tracking-widest", is2027 ? "text-yellow-700" : "text-slate-400")}>
+          Season
+        </p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {([2026, 2027] as const).map((year) => {
+            const active = season === year;
+            return (
+              <Link
+                key={year}
+                href={switchAdminSeason(pathname, year)}
+                className={cn(
+                  "rounded-lg px-2 py-2.5 text-center text-sm font-semibold border transition-colors",
+                  year === 2026 && active && "bg-slate-900 text-white border-slate-900",
+                  year === 2026 && !active && "bg-white text-slate-600 border-slate-200 hover:border-slate-400",
+                  year === 2027 && active && "bg-yellow-400 text-yellow-950 border-yellow-500",
+                  year === 2027 && !active && "bg-white text-yellow-800 border-yellow-200 hover:border-yellow-400 hover:bg-yellow-50"
+                )}
+              >
+                {year}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {NAV.map(({ href, label, icon }) => {
+        {NAV.map(({ rest, label, icon }) => {
+          const href = adminPath(season, rest);
           const isActive = pathname === href;
           return (
             <Link
@@ -86,12 +120,17 @@ export function Sidebar({ userEmail }: SidebarProps) {
               href={href}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors",
-                isActive
-                  ? "bg-indigo-50 text-indigo-700 font-medium"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                isActive && is2027 && "bg-yellow-100 text-yellow-900 font-medium",
+                isActive && !is2027 && "bg-indigo-50 text-indigo-700 font-medium",
+                !isActive && is2027 && "text-yellow-900/70 hover:bg-yellow-50 hover:text-yellow-950",
+                !isActive && !is2027 && "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
               )}
             >
-              <span className={cn(isActive ? "text-indigo-600" : "text-slate-400")}>
+              <span className={cn(
+                isActive && is2027 && "text-yellow-700",
+                isActive && !is2027 && "text-indigo-600",
+                !isActive && "text-slate-400"
+              )}>
                 {icon}
               </span>
               {label}
@@ -100,12 +139,14 @@ export function Sidebar({ userEmail }: SidebarProps) {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="px-6 py-5 border-t border-slate-100 space-y-3">
-        <p className="text-xs text-slate-400 truncate">{userEmail}</p>
+      <div className={cn("px-6 py-5 border-t space-y-3", is2027 ? "border-yellow-100" : "border-slate-100")}>
+        <p className={cn("text-xs truncate", is2027 ? "text-yellow-700" : "text-slate-400")}>{userEmail}</p>
         <button
           onClick={handleLogout}
-          className="text-xs text-slate-400 hover:text-slate-700 transition-colors"
+          className={cn(
+            "text-xs transition-colors",
+            is2027 ? "text-yellow-700 hover:text-yellow-950" : "text-slate-400 hover:text-slate-700"
+          )}
         >
           Sign out
         </button>

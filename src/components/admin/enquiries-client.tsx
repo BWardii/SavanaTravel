@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { ArrowUpDown, Search, ChevronRight, AlertTriangle, Clock, PoundSterling } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSeenEnquiries } from "@/hooks/use-seen-enquiries";
+import { useSeason } from "@/contexts/season-context";
 
 interface EnquiriesClientProps {
   customers: Customer[];
@@ -113,6 +114,8 @@ function DueDateCell({ c }: { c: Customer }) {
 }
 
 export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientProps) {
+  const season = useSeason();
+  const is2027 = season === 2027;
   const [customers, setCustomers] = useState<Customer[]>(initial);
   const [selected, setSelected]   = useState<Customer | null>(null);
   const [sorting, setSorting]     = useState<SortingState>([]);
@@ -272,8 +275,16 @@ export function EnquiriesClient({ customers: initial, isDemo }: EnquiriesClientP
       {/* Header */}
       <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold text-slate-900">Enquiries</h1>
-          <p className="text-xs text-slate-500">Invoice tracking, payment status and booking management</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold text-slate-900">Enquiries</h1>
+            <span className={cn(
+              "text-[10px] font-bold uppercase tracking-widest rounded px-2 py-0.5",
+              is2027 ? "bg-yellow-400 text-yellow-950" : "bg-slate-900 text-white"
+            )}>
+              {season}
+            </span>
+          </div>
+          <p className="text-xs text-slate-500">{season} invoice tracking, payment status and booking management</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-end">
           {isDemo && <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-100">Demo</Badge>}
